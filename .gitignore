@@ -1,0 +1,47 @@
+# Environment / secrets
+.env
+.env.*
+infra/.env
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.venv/
+
+# Airflow
+logs/
+infra/logs/
+airflow.cfg
+airflow.db
+
+# Airflow local data
+downloads/
+infra/downloads/
+
+# dbt
+dbt_stocks/logs/
+dbt_stocks/target/
+dbt_stocks/dbt_packages/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary / local data
+data/
+*.tmp
+*.temp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
