@@ -1,10 +1,15 @@
 import time
 import os
+from pathlib import Path
 import boto3 #deal with s3 bucket
 import requests
 import json
 from kafka import KafkaConsumer
+from dotenv import load_dotenv
 
+# Load .env file from infra directory
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 #minio connection
 s3=boto3.client(
@@ -12,8 +17,6 @@ s3=boto3.client(
     endpoint_url="http://localhost:9002",
     aws_access_key_id=os.getenv("MINIO_ACCESS_KEY"),
     aws_secret_access_key=os.getenv("MINIO_SECRET_KEY")
-
-
 )
 
 bucket_name="bronze-transactions"

@@ -4,3 +4,6 @@ snowflake-connector-python
 dbt-core
 dbt-snowflake
 requests
+streamlit
+plotly
+python-dotenv

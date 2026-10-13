@@ -21,9 +21,7 @@ SNOWFLAKE_DB = os.getenv("SNOWFLAKE_DB")
 SNOWFLAKE_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
 
 def download_from_minio():
-
     print("Starting MinIO download...")
-
     os.makedirs(LOCAL_DIR, exist_ok=True)
 
     s3 = boto3.client(
@@ -35,34 +33,25 @@ def download_from_minio():
 
     print("Connected to MinIO")
 
-    response = s3.list_objects_v2(Bucket=BUCKET)
-
-    print(f"Response: {response}")
-
-    objects = response.get("Contents", [])
-
-    print(f"Objects found: {len(objects)}")
+    # Use paginator to retrieve ALL objects across all pages (bypasses 1000 item limit)
+    paginator = s3.get_paginator("list_objects_v2")
+    pages = paginator.paginate(Bucket=BUCKET)
 
     local_files = []
+    total_count = 0
 
-    for obj in objects:
+    for page in pages:
+        for obj in page.get("Contents", []):
+            total_count += 1
+            key = obj["Key"]
+            # Preserve symbol in filename to avoid overwrites between stocks with same timestamp
+            safe_filename = key.replace("/", "_")
+            local_file = os.path.join(LOCAL_DIR, safe_filename)
 
-        key = obj["Key"]
+            s3.download_file(BUCKET, key, local_file)
+            local_files.append(local_file)
 
-        local_file = os.path.join(
-            LOCAL_DIR,
-            os.path.basename(key)
-        )
-
-        s3.download_file(
-            BUCKET,
-            key,
-            local_file
-        )
-
-        print(f"Downloaded {key} -> {local_file}")
-
-        local_files.append(local_file)
+    print(f"Downloaded {len(local_files)} files out of {total_count} total objects from MinIO.")
 
     if not local_files:
         print("No files found in MinIO.")
@@ -71,7 +60,6 @@ def download_from_minio():
 
 
 def load_to_snowflake(**kwargs):
-
     local_files = kwargs['ti'].xcom_pull(task_ids='download_minio')
 
     if not local_files:
@@ -96,7 +84,7 @@ def load_to_snowflake(**kwargs):
         PUT 'file:///opt/airflow/downloads/*.json'
         @%BRONZE_STOKES_QUOTES_RAW
         AUTO_COMPRESS=FALSE
-        OVERWRITE=FALSE
+        OVERWRITE=TRUE
     """)
 
     print("PUT result:")
@@ -119,7 +107,15 @@ def load_to_snowflake(**kwargs):
     cur.close()
     conn.close()
 
-    print("Data loaded successfully.")
+    # 3. Clean up local downloaded files
+    for f in local_files:
+        try:
+            if os.path.exists(f):
+                os.remove(f)
+        except Exception as e:
+            print(f"Failed to remove temp file {f}: {e}")
+
+    print("Data loaded successfully and temp files cleaned up.")
 
     
 default_args = {

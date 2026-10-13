@@ -78,4 +78,48 @@ The project demonstrates practical implementation of modern data engineering con
                     ┌─────────────────────┐
                     │        dbt          │
                     │ Transformation Layer│
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │      Streamlit      │
+                    │ Real-Time Dashboard │
                     └─────────────────────┘
+```
+
+---
+
+## 🚀 Quickstart Guide
+
+### 1. Start Infrastructure
+```bash
+cd infra
+docker compose up -d
+```
+
+### 2. Run Producer & Consumer
+- **Producer** (Finnhub API ➡️ Kafka):
+  ```bash
+  python infra/Producer/Producer.py
+  ```
+- **Consumer** (Kafka ➡️ MinIO):
+  ```bash
+  python infra/Consumer/Consumer.py
+  ```
+
+### 3. Orchestrate with Airflow
+- Open `http://localhost:8080` (Credentials: `admin` / `admin`)
+- Trigger the `minio_to_snowflake` DAG to load raw data into Snowflake.
+
+### 4. Transform Data with dbt
+```bash
+cd dbt_stocks
+dbt run
+```
+
+### 5. Launch Real-Time Streamlit Dashboard
+```bash
+streamlit run dashboard/app.py
+```
+Or simply run `run_dashboard.bat` from the root folder!
+Access the dashboard at: `http://localhost:8501`

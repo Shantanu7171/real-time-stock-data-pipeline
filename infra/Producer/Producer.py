@@ -1,8 +1,14 @@
 import time
 import json
 import os
+from pathlib import Path
 import requests
 from kafka import KafkaProducer
+from dotenv import load_dotenv
+
+# Load .env file from infra directory
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 #Define Variable for API
 API_KEY=os.getenv("API_KEY")
